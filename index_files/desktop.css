@@ -1,0 +1,5 @@
+/*追加hover*/
+#navi-wrapper .button:hover, #navi-wrapper .button.current {
+    background-color: #3f3e3e;
+    text-decoration: none;
+}
