@@ -1,1 +1,1 @@
-# sinestr.github.io
+# GitHub Pages
