@@ -2,9 +2,8 @@
 "QPitchEditor":
 	{
 		"LatestVersion":"0.1.9",
-		"Url":"https://www.demo.com/Demo_v1.1.exe",
-		"UpdateTime":"2019-03-31",
-      	"ReleaseNote":"1. 修复了一些 bug\n2. 添加右侧面板"
+		"UpdateTime":"2021-02-04",
+      	"ReleaseNote":"1. 修复了合成算法和一些 bug\n2. 添加了右侧面板"
 	},
 "Downloader":
 	{
