@@ -7,4 +7,12 @@
 		"Url":"https://www.demo.com/Demo_v1.1.exe",
       		"ReleaseNote":"1. 修复了合成算法和一些 bug\n2. 添加了右侧面板"
 	},
+"MacOS":
+	{
+		"LatestVersion":"0.1.9",
+		"UpdateTime":"2021-02-04",
+		"MD5":"123",
+		"Url":"https://www.demo.com/Demo_v1.1.dmg",
+      		"ReleaseNote":"实验"
+	}
 }
