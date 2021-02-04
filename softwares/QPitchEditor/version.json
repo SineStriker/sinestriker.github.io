@@ -1,13 +1,10 @@
 {
-"QPitchEditor":
+"Windows":
 	{
 		"LatestVersion":"0.1.9",
 		"UpdateTime":"2021-02-04",
-      		"ReleaseNote":"1. 修复了合成算法和一些 bug\n2. 添加了右侧面板"
-	},
-"Downloader":
-	{
 		"MD5":"123",
 		"Url":"https://www.demo.com/Demo_v1.1.exe"
-	}
+      		"ReleaseNote":"1. 修复了合成算法和一些 bug\n2. 添加了右侧面板"
+	},
 }
