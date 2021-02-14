@@ -1208,22 +1208,182 @@ description=说明
 <li>QQ：2208325774</li>
 <li>Email：trueful@163.com</li>
 </ul>
+<h1><a class="header" href="#咬合校正" id="咬合校正">咬合校正</a></h1>
+<p><a href="https://shinta0806be.ldblog.jp/archives/8298940.html">原文链接（日语）</a> 作者：SHINTA P</p>
+<hr />
+<ul>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E5%92%AC%E5%90%88%E6%A0%A1%E6%AD%A3">咬合校正</a>
+<ul>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E5%A3%B0%E6%98%8E">声明</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E6%A0%A1%E6%AD%A3">为什么需要校正</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E6%A0%A1%E6%AD%A3%E8%BF%87%E7%A8%8B">校正过程</a>
+<ul>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E8%BE%85%E9%9F%B3%E9%80%9F%E5%BA%A6">辅音速度</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E5%88%9D%E5%A7%8B%E5%8F%98%E9%87%8F%E5%80%BC">初始变量值</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E6%9C%80%E5%A4%A7%E5%85%88%E8%A1%8C%E9%95%BF%E5%BA%A6">最大先行长度</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E5%92%AC%E5%90%88%E6%A0%A1%E6%AD%A3%E7%9A%84%E5%90%AF%E5%8A%A8%E6%9D%A1%E4%BB%B6">咬合校正的启动条件</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E5%92%AC%E5%90%88%E6%A0%A1%E6%AD%A3%E7%8E%87%E7%B3%BB%E6%95%B0">咬合校正率（系数）</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E6%A0%A1%E6%AD%A3%E5%90%8E%E7%9A%84%E5%8F%98%E9%87%8F%E5%80%BC">校正后的变量值</a></li>
+</ul>
+</li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E9%9F%B3%E7%AC%A6%E5%AE%9E%E9%99%85%E9%95%BF%E5%BA%A6%E4%B8%8E%E4%BA%8C%E6%AC%A1%E6%A0%A1%E6%AD%A3">音符实际长度与二次校正</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#utau-%E4%B8%AD%E7%9A%84-bug">UTAU 中的 Bug</a></li>
+<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E7%AE%80%E6%98%93c%E6%A0%A1%E6%AD%A3%E7%AE%97%E6%B3%95">简易C++校正算法</a></li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#声明" id="声明">声明</a></h2>
+<ul>
+<li>咬合校正是 UTAU 计算音符长度时非常重要的环节，虽然 Ameya 大大没有公布实际的校正算法，但是通过其他前辈的文档以及我自己的一些推导，在做了大量实验比较后，比较好地还原了校正过程。</li>
+</ul>
+<h2><a class="header" href="#为什么需要校正" id="为什么需要校正">为什么需要校正</a></h2>
+<ul>
+<li>
+<p>如果一个音符的先行声音长度太大，并且它的前驱音符长度比较短，在这种情况下，理论上就会比前驱音符先发声。（换句话说，前驱音符直接被缩没了）</p>
+</li>
+<li>
+<p>例如，当曲速为360时（四分音符的时长为167毫秒），有两个连续的四分音符（歌词分别为“あ”与“い”），如果后者的先行发声（设重叠为0）为200毫秒，那么理论上前者就会被全部被挤占。</p>
+</li>
+</ul>
+<center><img src="Developers/UTAU-Backend/./Length-Correction_Image1.png"/></center>
+<!-- ![pic1](./Length-Correction_Image1.png#pic_center) -->
+<ul>
+<li>
+<p>为了防止出现这种奇怪的情况，在UTAU中，当一个音符的先行声音使前一个音符缩短了一半以上的长度时，为了让前一个音符能存活一半长度（即用ticks计算的毫秒数除以2），该音符的先行声音、重叠和STP会被调整。</p>
+</li>
+<li>
+<p>在示例情况下，它实际的先行声音会被调整为约83毫秒，使得前驱的音符能存活一半。</p>
+</li>
+<li>
+<p>我（自作主张）地把这种调整称为“咬合校正”。</p>
+</li>
+</ul>
+<h2><a class="header" href="#校正过程" id="校正过程">校正过程</a></h2>
+<h3><a class="header" href="#辅音速度" id="辅音速度">辅音速度</a></h3>
+<blockquote>
+<ul>
+<li>指定先行声音和重叠部分的伸缩倍率，可以在0到200的范围内指定，并且100不会扩展或收缩</li>
+<li>辅音速度值越大，速度越快，辅音部分被缩得越短。辅音速度0在时间轴上是两倍，200是一半</li>
+<li>设 k 是实际伸缩倍率，v 是辅音速度，则 k = 2^(1 - v / 100)</li>
+</ul>
+</blockquote>
+<!-- $k = 2^{1 - \frac{v}{100}}$ /-->
+<h3><a class="header" href="#初始变量值" id="初始变量值">初始变量值</a></h3>
+<blockquote>
+<ul>
+<li>初始的先行声音与重叠从属性面板中读取，如果属性面板为空，则从原音设定读取</li>
+<li>初始 STP 从属性面板读取，如果属性面板为空，则为 0</li>
+</ul>
+</blockquote>
+<ul>
+<li>音符理论时长（ms） = 音长（Ticks）/ 480 * 60 / 音符曲速 * 1000</li>
+<li>伸缩倍率 = 2^(1 - 辅音速度 / 100)</li>
+<li>先行声音 = 初始先行声音 * 伸缩倍率</li>
+<li>重叠 = 初始重叠 * 伸缩倍率</li>
+</ul>
+<h3><a class="header" href="#最大先行长度" id="最大先行长度">最大先行长度</a></h3>
+<ul>
+<li>如果前驱音符是一般音符，最大限制长度 = 前驱音符理论时长 / 2</li>
+<li>如果前驱音符是<strong>休止符</strong>，最大限制长度 = 前驱音符理论时长</li>
+</ul>
+<h3><a class="header" href="#咬合校正的启动条件" id="咬合校正的启动条件">咬合校正的启动条件</a></h3>
+<ul>
+<li>先行声音 - 重叠 &gt; 最大先行长度</li>
+</ul>
+<h3><a class="header" href="#咬合校正率系数" id="咬合校正率系数">咬合校正率（系数）</a></h3>
+<ul>
+<li>咬合校正率 = 最大先行长度 /（先行声音－重叠）</li>
+</ul>
+<h3><a class="header" href="#校正后的变量值" id="校正后的变量值">校正后的变量值</a></h3>
+<ul>
+<li>校正后的先行声音 = 先行声音 * 咬合校正率</li>
+<li>校正后的重叠 ＝ 重叠 * 咬合校正率</li>
+<li>校正后的 STP = 先行声音 - 校正后的先行声音 + 初始 STP</li>
+</ul>
+<h2><a class="header" href="#音符实际长度与二次校正" id="音符实际长度与二次校正">音符实际长度与二次校正</a></h2>
+<ul>
+<li>末端偏移 = 后继音符的重叠（校正后） - 后继音符的先行声音（校正后）</li>
+<li>如果后继音符设置了一个非常大的重叠值，或者其他原因，使得<strong>末端偏移超过后继音符的理论时长，那么就取后继音符的理论时长</strong></li>
+<li>实际长度 = 理论时长 + 先行声音（校正后）+末端偏移</li>
+</ul>
+<h2><a class="header" href="#utau-中的-bug" id="utau-中的-bug">UTAU 中的 Bug</a></h2>
+<ul>
+<li>
+<p>在测试变速曲的时候发现了一个严重的问题，这一问题告诉插件开发者，UTAU 提供给插件的校正后的先行/重叠/STP是有问题的。</p>
+</li>
+<li>
+<p>我们知道，音符长度（毫秒）= 音长(ticks) / 480 * 60 / 曲速 * 1000</p>
+</li>
+<li>
+<p>UTAU在UI中执行当前音符的咬合校正计算时，用的是<strong>当前音符的曲速</strong>去计算<strong>前驱音符的长度</strong>，但是在<strong>传给引擎参数时又正确地用了前驱音符的曲速</strong>。</p>
+</li>
+<li>
+<p>也就是说，它显示在UI上的，与它传给插件的校正结果都是有问题的！（幸好传给引擎的是对的）</p>
+</li>
+<li>
+<p>有以下三种情况</p>
+<ol>
+<li>在前驱音符曲速与当前音符的相等时，不会引起什么问题。</li>
+<li>在前驱音符曲速小于当前音符的时，那就意味着UI中计算的前驱音符长度变短了，有可能原本不用启动校正但是却被校正了。</li>
+<li>在前驱音符曲速大于当前音符的时，那就意味着UI中计算的前驱音符长度变长了，有可能UI中的校正力度可能不够大，导致UI中计算的校正后的先行声音照样能吞掉前驱音符一半长度（或者吞掉前驱休止符的整个长度，导致合成器接收到的音符长度是负的，造成严重错误）。</li>
+</ol>
+</li>
+<li>
+<p>建议：所以在插件里，如果要使用校正后的先行/重叠/STP，最好还是自己算，或者在检测到前驱音符与当前音符曲速不相等时不使用UTAU提供的校正结果。</p>
+</li>
+<li>
+<p>在UTAU中手动修改的STP会直接与在校正后的STP相加作为新的STP传给引擎，校正后的先行声音和重叠不受影响，不过最好还是不要去改它。</p>
+</li>
+<li>
+<p>UTAU 在传递给引擎数据的 <strong>先行声音/重叠/STP</strong> 都是经过校正的。</p>
+</li>
+</ul>
+<p> </p>
+<h2><a class="header" href="#简易c校正算法" id="简易c校正算法">简易C++校正算法</a></h2>
+<pre><code>// 先去除首位空格，判断余下部分是否为空或r或R，如果是就为真
+bool isRestNoteLyric();
+
+// 首先从UST中获取当前音符与前驱音符的所有音符属性
+GetValueFromSectionNote();
+
+// 判断过程如下
+double CorrectRate = 1;
+double velocityRate = pow(2, 1 - CurVelocity / 100);
+
+CurPreUttr *= velocityRate;
+CurOverlap *= velocityRate;
+
+if (hasPrevNote){
+double PrevDuration = double(PrevLength) / 480 * 60 / PrevTempo * 1000;
+double MaxOccupy = isRestNoteLyric(PrevLyric) ? PrevDuration : (PrevDuration / 2);
+    if (aCurPreUttr - aCurOverlap &gt; MaxOccupy) {
+		    CorrectRate = MaxOccupy / (CurPreUttr - CurOverlap);
+    }
+}
+
+double CorrecetPreUttr = CorrectRate * CurPreUttr;
+double CorrecetOverlap = CorrectRate * CurOverlap;
+double CorrecetSTPoint = CurPreUttr - CorrecetPreUttr;
+
+// 追加用户设置的STP  
+CorrectSTPoint += CurSTPoint;
+</code></pre>
 <h1><a class="header" href="#关于qpitcheditor-10" id="关于qpitcheditor-10">关于QPitchEditor</a></h1>
 <p>一个简要的说明</p>
 <hr />
 <ul>
-<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
+<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
 <ul>
-<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
+<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E7%AE%80%E4%BB%8B">简介</a></li>
+<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
 <ul>
-<li><a href="Developers/UTAU-Backend/Length-Correction.html#qt">Qt</a></li>
-<li><a href="Developers/UTAU-Backend/Length-Correction.html#libutau216">LibUTAU216</a></li>
+<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#qt">Qt</a></li>
+<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#libutau216">LibUTAU216</a></li>
 </ul>
 </li>
-<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="Developers/UTAU-Backend/Length-Correction.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
+<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
+<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E5%85%B6%E4%BB%96">其他</a></li>
+<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
 </ul>
 </li>
 </ul>
@@ -1265,18 +1425,18 @@ description=说明
 <p>一个简要的说明</p>
 <hr />
 <ul>
-<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
+<li><a href="Developers/UTAU-Tools/Resampler.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
 <ul>
-<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
+<li><a href="Developers/UTAU-Tools/Resampler.html#%E7%AE%80%E4%BB%8B">简介</a></li>
+<li><a href="Developers/UTAU-Tools/Resampler.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
 <ul>
-<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#qt">Qt</a></li>
-<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#libutau216">LibUTAU216</a></li>
+<li><a href="Developers/UTAU-Tools/Resampler.html#qt">Qt</a></li>
+<li><a href="Developers/UTAU-Tools/Resampler.html#libutau216">LibUTAU216</a></li>
 </ul>
 </li>
-<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="Developers/UTAU-Tools/UTAU-Tools.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
+<li><a href="Developers/UTAU-Tools/Resampler.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
+<li><a href="Developers/UTAU-Tools/Resampler.html#%E5%85%B6%E4%BB%96">其他</a></li>
+<li><a href="Developers/UTAU-Tools/Resampler.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
 </ul>
 </li>
 </ul>
@@ -1318,18 +1478,18 @@ description=说明
 <p>一个简要的说明</p>
 <hr />
 <ul>
-<li><a href="Developers/UTAU-Tools/Resampler.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
+<li><a href="Developers/UTAU-Tools/Wavtool.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
 <ul>
-<li><a href="Developers/UTAU-Tools/Resampler.html#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="Developers/UTAU-Tools/Resampler.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
+<li><a href="Developers/UTAU-Tools/Wavtool.html#%E7%AE%80%E4%BB%8B">简介</a></li>
+<li><a href="Developers/UTAU-Tools/Wavtool.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
 <ul>
-<li><a href="Developers/UTAU-Tools/Resampler.html#qt">Qt</a></li>
-<li><a href="Developers/UTAU-Tools/Resampler.html#libutau216">LibUTAU216</a></li>
+<li><a href="Developers/UTAU-Tools/Wavtool.html#qt">Qt</a></li>
+<li><a href="Developers/UTAU-Tools/Wavtool.html#libutau216">LibUTAU216</a></li>
 </ul>
 </li>
-<li><a href="Developers/UTAU-Tools/Resampler.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="Developers/UTAU-Tools/Resampler.html#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="Developers/UTAU-Tools/Resampler.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
+<li><a href="Developers/UTAU-Tools/Wavtool.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
+<li><a href="Developers/UTAU-Tools/Wavtool.html#%E5%85%B6%E4%BB%96">其他</a></li>
+<li><a href="Developers/UTAU-Tools/Wavtool.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
 </ul>
 </li>
 </ul>
@@ -1363,59 +1523,6 @@ description=说明
 <li>如果您在使用中发现任何 Bug，请第一时间联系我修改。</li>
 </ol>
 <h2><a class="header" href="#联系方式-12" id="联系方式-12">联系方式</a></h2>
-<ul>
-<li>QQ：2208325774</li>
-<li>Email：trueful@163.com</li>
-</ul>
-<h1><a class="header" href="#关于qpitcheditor-13" id="关于qpitcheditor-13">关于QPitchEditor</a></h1>
-<p>一个简要的说明</p>
-<hr />
-<ul>
-<li><a href="Developers/UTAU-Tools/Wavtool.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
-<ul>
-<li><a href="Developers/UTAU-Tools/Wavtool.html#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="Developers/UTAU-Tools/Wavtool.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
-<ul>
-<li><a href="Developers/UTAU-Tools/Wavtool.html#qt">Qt</a></li>
-<li><a href="Developers/UTAU-Tools/Wavtool.html#libutau216">LibUTAU216</a></li>
-</ul>
-</li>
-<li><a href="Developers/UTAU-Tools/Wavtool.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="Developers/UTAU-Tools/Wavtool.html#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="Developers/UTAU-Tools/Wavtool.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
-</ul>
-</li>
-</ul>
-<h2><a class="header" href="#简介-13" id="简介-13">简介</a></h2>
-<ul>
-<li>QPitchEditor 是使用 Qt 开发、以更便捷的方式实现 UTAU 的功能而设计的工具，是 UTAU 的<strong>第三方编辑器</strong>。</li>
-<li>QPitchEditor 主要服务于 UTAU 的使用群体，它既可以作为插件供 UTAU 本体调用，也可以独立编辑 UST 文件。</li>
-<li>QPitchEditor 是共享免费软件，它将会<strong>终身免费</strong>供各位用户使用，不时进行更新。</li>
-<li>您可以在不修改本程序任何原始文件的条件下自由复制、分发本程序。</li>
-</ul>
-<h2><a class="header" href="#依赖关系-13" id="依赖关系-13">依赖关系</a></h2>
-<h3><a class="header" href="#qt-13" id="qt-13">Qt</a></h3>
-<p>QPitchEditor 使用 Qt 5.15.2 开发，在LGPL v3协议许可下以动态链接形式发布。<br />
-链接：<a href="https://www.qt.io/">www.qt.io</a></p>
-<h3><a class="header" href="#libutau216-13" id="libutau216-13">LibUTAU216</a></h3>
-<p>QPitchEditor 使用了 LibUTAU216（C++类库），感谢前辈大大。<br />
-原作者：SHINTA P<br />
-协议：Attribution-NonCommercial-Inheritance<br />
-链接：<a href="https://w.atwiki.jp/libutau/pages/1.htm">https://w.atwiki.jp/libutau/pages/1.htm</a></p>
-<h2><a class="header" href="#关于作者-13" id="关于作者-13">关于作者</a></h2>
-<ul>
-<li>本人与各位一样，是 UTAU 的粉丝，对 UTAU 的原理有一定的研究，但调音能力在水平线以下。</li>
-<li>本人主要使用 C++ 为工具，在开发 QPitchEditor 前制作了一大堆 UTAU 插件，自此对 UTAU 爱到一发不可收拾。</li>
-<li>本人主要使用 UTAU 制作三次元（鬼畜）作品，诚心希望各位大大不要产生偏见。</li>
-<li>本人不是音乐专业，天生五音不全。</li>
-<li>幻想将来做一个声音合成引擎。</li>
-</ul>
-<h2><a class="header" href="#其他-13" id="其他-13">其他</a></h2>
-<ol>
-<li>本页面使用 mdBook 设计，感谢 GitHub Pages 提供服务器。</li>
-<li>如果您在使用中发现任何 Bug，请第一时间联系我修改。</li>
-</ol>
-<h2><a class="header" href="#联系方式-13" id="联系方式-13">联系方式</a></h2>
 <ul>
 <li>QQ：2208325774</li>
 <li>Email：trueful@163.com</li>
@@ -1473,7 +1580,7 @@ description=说明
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#声明" id="声明">声明</a></h2>
+<h2><a class="header" href="#声明-1" id="声明-1">声明</a></h2>
 <p>本文依据个人分析所写，因此可能存在少量不严谨。另外，翻译过程中补充了一些内容。</p>
 <h2><a class="header" href="#渲染脚本的位置" id="渲染脚本的位置">渲染脚本的位置</a></h2>
 <h3><a class="header" href="#临时文件夹" id="临时文件夹">临时文件夹</a></h3>
@@ -1658,7 +1765,7 @@ temp_helper.bat的启动指令</p>
 删除temp.whd与temp.dat。</p>
 <p><strong>:E</strong><br />
 跳过合并与删除过程的标签。</p>
-<h1><a class="header" href="#关于qpitcheditor-14" id="关于qpitcheditor-14">关于QPitchEditor</a></h1>
+<h1><a class="header" href="#关于qpitcheditor-13" id="关于qpitcheditor-13">关于QPitchEditor</a></h1>
 <p>一个简要的说明</p>
 <hr />
 <ul>
@@ -1674,6 +1781,59 @@ temp_helper.bat的启动指令</p>
 <li><a href="Developers/Res-And-Ref/Res-And-Ref.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
 <li><a href="Developers/Res-And-Ref/Res-And-Ref.html#%E5%85%B6%E4%BB%96">其他</a></li>
 <li><a href="Developers/Res-And-Ref/Res-And-Ref.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#简介-13" id="简介-13">简介</a></h2>
+<ul>
+<li>QPitchEditor 是使用 Qt 开发、以更便捷的方式实现 UTAU 的功能而设计的工具，是 UTAU 的<strong>第三方编辑器</strong>。</li>
+<li>QPitchEditor 主要服务于 UTAU 的使用群体，它既可以作为插件供 UTAU 本体调用，也可以独立编辑 UST 文件。</li>
+<li>QPitchEditor 是共享免费软件，它将会<strong>终身免费</strong>供各位用户使用，不时进行更新。</li>
+<li>您可以在不修改本程序任何原始文件的条件下自由复制、分发本程序。</li>
+</ul>
+<h2><a class="header" href="#依赖关系-13" id="依赖关系-13">依赖关系</a></h2>
+<h3><a class="header" href="#qt-13" id="qt-13">Qt</a></h3>
+<p>QPitchEditor 使用 Qt 5.15.2 开发，在LGPL v3协议许可下以动态链接形式发布。<br />
+链接：<a href="https://www.qt.io/">www.qt.io</a></p>
+<h3><a class="header" href="#libutau216-13" id="libutau216-13">LibUTAU216</a></h3>
+<p>QPitchEditor 使用了 LibUTAU216（C++类库），感谢前辈大大。<br />
+原作者：SHINTA P<br />
+协议：Attribution-NonCommercial-Inheritance<br />
+链接：<a href="https://w.atwiki.jp/libutau/pages/1.htm">https://w.atwiki.jp/libutau/pages/1.htm</a></p>
+<h2><a class="header" href="#关于作者-13" id="关于作者-13">关于作者</a></h2>
+<ul>
+<li>本人与各位一样，是 UTAU 的粉丝，对 UTAU 的原理有一定的研究，但调音能力在水平线以下。</li>
+<li>本人主要使用 C++ 为工具，在开发 QPitchEditor 前制作了一大堆 UTAU 插件，自此对 UTAU 爱到一发不可收拾。</li>
+<li>本人主要使用 UTAU 制作三次元（鬼畜）作品，诚心希望各位大大不要产生偏见。</li>
+<li>本人不是音乐专业，天生五音不全。</li>
+<li>幻想将来做一个声音合成引擎。</li>
+</ul>
+<h2><a class="header" href="#其他-13" id="其他-13">其他</a></h2>
+<ol>
+<li>本页面使用 mdBook 设计，感谢 GitHub Pages 提供服务器。</li>
+<li>如果您在使用中发现任何 Bug，请第一时间联系我修改。</li>
+</ol>
+<h2><a class="header" href="#联系方式-13" id="联系方式-13">联系方式</a></h2>
+<ul>
+<li>QQ：2208325774</li>
+<li>Email：trueful@163.com</li>
+</ul>
+<h1><a class="header" href="#关于qpitcheditor-14" id="关于qpitcheditor-14">关于QPitchEditor</a></h1>
+<p>一个简要的说明</p>
+<hr />
+<ul>
+<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
+<ul>
+<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E7%AE%80%E4%BB%8B">简介</a></li>
+<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
+<ul>
+<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#qt">Qt</a></li>
+<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#libutau216">LibUTAU216</a></li>
+</ul>
+</li>
+<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
+<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E5%85%B6%E4%BB%96">其他</a></li>
+<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
 </ul>
 </li>
 </ul>
@@ -1715,18 +1875,18 @@ temp_helper.bat的启动指令</p>
 <p>一个简要的说明</p>
 <hr />
 <ul>
-<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
+<li><a href="Developers/Res-And-Ref/Previewer.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
 <ul>
-<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
+<li><a href="Developers/Res-And-Ref/Previewer.html#%E7%AE%80%E4%BB%8B">简介</a></li>
+<li><a href="Developers/Res-And-Ref/Previewer.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
 <ul>
-<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#qt">Qt</a></li>
-<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#libutau216">LibUTAU216</a></li>
+<li><a href="Developers/Res-And-Ref/Previewer.html#qt">Qt</a></li>
+<li><a href="Developers/Res-And-Ref/Previewer.html#libutau216">LibUTAU216</a></li>
 </ul>
 </li>
-<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="Developers/Res-And-Ref/Plugin-Libraries.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
+<li><a href="Developers/Res-And-Ref/Previewer.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
+<li><a href="Developers/Res-And-Ref/Previewer.html#%E5%85%B6%E4%BB%96">其他</a></li>
+<li><a href="Developers/Res-And-Ref/Previewer.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
 </ul>
 </li>
 </ul>
@@ -1768,18 +1928,18 @@ temp_helper.bat的启动指令</p>
 <p>一个简要的说明</p>
 <hr />
 <ul>
-<li><a href="Developers/Res-And-Ref/Previewer.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
+<li><a href="Developers/Res-And-Ref/Other.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
 <ul>
-<li><a href="Developers/Res-And-Ref/Previewer.html#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="Developers/Res-And-Ref/Previewer.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
+<li><a href="Developers/Res-And-Ref/Other.html#%E7%AE%80%E4%BB%8B">简介</a></li>
+<li><a href="Developers/Res-And-Ref/Other.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
 <ul>
-<li><a href="Developers/Res-And-Ref/Previewer.html#qt">Qt</a></li>
-<li><a href="Developers/Res-And-Ref/Previewer.html#libutau216">LibUTAU216</a></li>
+<li><a href="Developers/Res-And-Ref/Other.html#qt">Qt</a></li>
+<li><a href="Developers/Res-And-Ref/Other.html#libutau216">LibUTAU216</a></li>
 </ul>
 </li>
-<li><a href="Developers/Res-And-Ref/Previewer.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="Developers/Res-And-Ref/Previewer.html#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="Developers/Res-And-Ref/Previewer.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
+<li><a href="Developers/Res-And-Ref/Other.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
+<li><a href="Developers/Res-And-Ref/Other.html#%E5%85%B6%E4%BB%96">其他</a></li>
+<li><a href="Developers/Res-And-Ref/Other.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
 </ul>
 </li>
 </ul>
@@ -1821,18 +1981,18 @@ temp_helper.bat的启动指令</p>
 <p>一个简要的说明</p>
 <hr />
 <ul>
-<li><a href="Developers/Res-And-Ref/Other.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
+<li><a href="Contributors/Contributors.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
 <ul>
-<li><a href="Developers/Res-And-Ref/Other.html#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="Developers/Res-And-Ref/Other.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
+<li><a href="Contributors/Contributors.html#%E7%AE%80%E4%BB%8B">简介</a></li>
+<li><a href="Contributors/Contributors.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
 <ul>
-<li><a href="Developers/Res-And-Ref/Other.html#qt">Qt</a></li>
-<li><a href="Developers/Res-And-Ref/Other.html#libutau216">LibUTAU216</a></li>
+<li><a href="Contributors/Contributors.html#qt">Qt</a></li>
+<li><a href="Contributors/Contributors.html#libutau216">LibUTAU216</a></li>
 </ul>
 </li>
-<li><a href="Developers/Res-And-Ref/Other.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="Developers/Res-And-Ref/Other.html#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="Developers/Res-And-Ref/Other.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
+<li><a href="Contributors/Contributors.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
+<li><a href="Contributors/Contributors.html#%E5%85%B6%E4%BB%96">其他</a></li>
+<li><a href="Contributors/Contributors.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
 </ul>
 </li>
 </ul>
@@ -1866,59 +2026,6 @@ temp_helper.bat的启动指令</p>
 <li>如果您在使用中发现任何 Bug，请第一时间联系我修改。</li>
 </ol>
 <h2><a class="header" href="#联系方式-17" id="联系方式-17">联系方式</a></h2>
-<ul>
-<li>QQ：2208325774</li>
-<li>Email：trueful@163.com</li>
-</ul>
-<h1><a class="header" href="#关于qpitcheditor-18" id="关于qpitcheditor-18">关于QPitchEditor</a></h1>
-<p>一个简要的说明</p>
-<hr />
-<ul>
-<li><a href="Contributors/Contributors.html#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
-<ul>
-<li><a href="Contributors/Contributors.html#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="Contributors/Contributors.html#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
-<ul>
-<li><a href="Contributors/Contributors.html#qt">Qt</a></li>
-<li><a href="Contributors/Contributors.html#libutau216">LibUTAU216</a></li>
-</ul>
-</li>
-<li><a href="Contributors/Contributors.html#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="Contributors/Contributors.html#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="Contributors/Contributors.html#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
-</ul>
-</li>
-</ul>
-<h2><a class="header" href="#简介-18" id="简介-18">简介</a></h2>
-<ul>
-<li>QPitchEditor 是使用 Qt 开发、以更便捷的方式实现 UTAU 的功能而设计的工具，是 UTAU 的<strong>第三方编辑器</strong>。</li>
-<li>QPitchEditor 主要服务于 UTAU 的使用群体，它既可以作为插件供 UTAU 本体调用，也可以独立编辑 UST 文件。</li>
-<li>QPitchEditor 是共享免费软件，它将会<strong>终身免费</strong>供各位用户使用，不时进行更新。</li>
-<li>您可以在不修改本程序任何原始文件的条件下自由复制、分发本程序。</li>
-</ul>
-<h2><a class="header" href="#依赖关系-18" id="依赖关系-18">依赖关系</a></h2>
-<h3><a class="header" href="#qt-18" id="qt-18">Qt</a></h3>
-<p>QPitchEditor 使用 Qt 5.15.2 开发，在LGPL v3协议许可下以动态链接形式发布。<br />
-链接：<a href="https://www.qt.io/">www.qt.io</a></p>
-<h3><a class="header" href="#libutau216-18" id="libutau216-18">LibUTAU216</a></h3>
-<p>QPitchEditor 使用了 LibUTAU216（C++类库），感谢前辈大大。<br />
-原作者：SHINTA P<br />
-协议：Attribution-NonCommercial-Inheritance<br />
-链接：<a href="https://w.atwiki.jp/libutau/pages/1.htm">https://w.atwiki.jp/libutau/pages/1.htm</a></p>
-<h2><a class="header" href="#关于作者-18" id="关于作者-18">关于作者</a></h2>
-<ul>
-<li>本人与各位一样，是 UTAU 的粉丝，对 UTAU 的原理有一定的研究，但调音能力在水平线以下。</li>
-<li>本人主要使用 C++ 为工具，在开发 QPitchEditor 前制作了一大堆 UTAU 插件，自此对 UTAU 爱到一发不可收拾。</li>
-<li>本人主要使用 UTAU 制作三次元（鬼畜）作品，诚心希望各位大大不要产生偏见。</li>
-<li>本人不是音乐专业，天生五音不全。</li>
-<li>幻想将来做一个声音合成引擎。</li>
-</ul>
-<h2><a class="header" href="#其他-18" id="其他-18">其他</a></h2>
-<ol>
-<li>本页面使用 mdBook 设计，感谢 GitHub Pages 提供服务器。</li>
-<li>如果您在使用中发现任何 Bug，请第一时间联系我修改。</li>
-</ol>
-<h2><a class="header" href="#联系方式-18" id="联系方式-18">联系方式</a></h2>
 <ul>
 <li>QQ：2208325774</li>
 <li>Email：trueful@163.com</li>
