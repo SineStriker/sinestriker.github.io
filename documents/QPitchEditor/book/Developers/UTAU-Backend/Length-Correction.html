@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="cn" class="sidebar-visible no-js light">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -42,6 +42,8 @@
         <link rel="stylesheet" href="../../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
+        
+        <link rel="stylesheet" href="../.././src/custom.css">
         
 
         
@@ -309,11 +311,11 @@ CurPreUttr *= velocityRate;
 CurOverlap *= velocityRate;
 
 if (hasPrevNote){
-double PrevDuration = double(PrevLength) / 480 * 60 / PrevTempo * 1000;
-double MaxOccupy = isRestNoteLyric(PrevLyric) ? PrevDuration : (PrevDuration / 2);
-    if (aCurPreUttr - aCurOverlap &gt; MaxOccupy) {
-		    CorrectRate = MaxOccupy / (CurPreUttr - CurOverlap);
-    }
+  double PrevDuration = double(PrevLength) / 480 * 60 / PrevTempo * 1000;
+  double MaxOccupy = isRestNoteLyric(PrevLyric) ? PrevDuration : (PrevDuration / 2);
+  if (aCurPreUttr - aCurOverlap &gt; MaxOccupy) {
+    CorrectRate = MaxOccupy / (CurPreUttr - CurOverlap);
+  }
 }
 
 double CorrecetPreUttr = CorrectRate * CurPreUttr;
