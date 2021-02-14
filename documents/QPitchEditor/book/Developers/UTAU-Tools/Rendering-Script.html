@@ -163,59 +163,244 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#关于qpitcheditor" id="关于qpitcheditor">关于QPitchEditor</a></h1>
-<p>一个简要的说明</p>
+                        <h1><a class="header" href="#utau-渲染脚本" id="utau-渲染脚本">UTAU 渲染脚本</a></h1>
+<p><a href="https://ch.nicovideo.jp/delta_kimigatame/blomaga/ar429837">原文链接（日语）</a> 原作者：<a href="https://twitter.com/delta_kuro">delta_kuro</a></p>
 <hr />
+<h2><a class="header" href="#声明" id="声明">声明</a></h2>
+<p>本文依据个人分析所写，因此可能存在少量不严谨。另外，翻译过程中补充了一些内容。</p>
 <ul>
-<li><a href="#%E5%85%B3%E4%BA%8Eqpitcheditor">关于QPitchEditor</a>
+<li><a href="#utau-%E6%B8%B2%E6%9F%93%E8%84%9A%E6%9C%AC">UTAU 渲染脚本</a>
 <ul>
-<li><a href="#%E7%AE%80%E4%BB%8B">简介</a></li>
-<li><a href="#%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB">依赖关系</a>
+<li><a href="#%E5%A3%B0%E6%98%8E">声明</a></li>
+<li><a href="#%E6%B8%B2%E6%9F%93%E8%84%9A%E6%9C%AC%E7%9A%84%E4%BD%8D%E7%BD%AE">渲染脚本的位置</a>
 <ul>
-<li><a href="#qt">Qt</a></li>
-<li><a href="#libutau216">LibUTAU216</a></li>
+<li><a href="#%E4%B8%B4%E6%97%B6%E6%96%87%E4%BB%B6%E5%A4%B9">临时文件夹</a></li>
+<li><a href="#%E8%84%9A%E6%9C%AC%E6%96%87%E4%BB%B6">脚本文件</a></li>
 </ul>
 </li>
-<li><a href="#%E5%85%B3%E4%BA%8E%E4%BD%9C%E8%80%85">关于作者</a></li>
-<li><a href="#%E5%85%B6%E4%BB%96">其他</a></li>
-<li><a href="#%E8%81%94%E7%B3%BB%E6%96%B9%E5%BC%8F">联系方式</a></li>
+<li><a href="#%E6%B8%B2%E6%9F%93%E8%84%9A%E6%9C%AC%E7%9A%84%E4%BD%9C%E7%94%A8">渲染脚本的作用</a>
+<ul>
+<li><a href="#%E5%8D%95%E6%A0%B8%E5%A4%84%E7%90%86">单核处理</a>
+<ul>
+<li><a href="#tempbat">temp.bat</a></li>
+<li><a href="#temp_helperbat">temp_helper.bat</a></li>
+</ul>
+</li>
+<li><a href="#%E5%A4%9A%E6%A0%B8%E5%A4%84%E7%90%86">多核处理</a>
+<ul>
+<li><a href="#tempbat-1">temp.bat</a></li>
+<li><a href="#%E5%85%B6%E4%BB%96%E6%89%B9%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6">其他批处理文件</a></li>
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#简介" id="简介">简介</a></h2>
+</li>
+<li><a href="#%E6%B8%B2%E6%9F%93%E8%84%9A%E6%9C%AC%E7%9A%84%E5%86%85%E5%AE%B9">渲染脚本的内容</a>
 <ul>
-<li>QPitchEditor 是使用 Qt 开发、以更便捷的方式实现 UTAU 的功能而设计的工具，是 UTAU 的<strong>第三方编辑器</strong>。</li>
-<li>QPitchEditor 主要服务于 UTAU 的使用群体，它既可以作为插件供 UTAU 本体调用，也可以独立编辑 UST 文件。</li>
-<li>QPitchEditor 是共享免费软件，它将会<strong>终身免费</strong>供各位用户使用，不时进行更新。</li>
-<li>您可以在不修改本程序任何原始文件的条件下自由复制、分发本程序。</li>
-</ul>
-<h2><a class="header" href="#依赖关系" id="依赖关系">依赖关系</a></h2>
-<h3><a class="header" href="#qt" id="qt">Qt</a></h3>
-<p>QPitchEditor 使用 Qt 5.15.2 开发，在LGPL v3协议许可下以动态链接形式发布。<br />
-链接：<a href="https://www.qt.io/">www.qt.io</a></p>
-<h3><a class="header" href="#libutau216" id="libutau216">LibUTAU216</a></h3>
-<p>QPitchEditor 使用了 LibUTAU216（C++类库），感谢前辈大大。<br />
-原作者：SHINTA P<br />
-协议：Attribution-NonCommercial-Inheritance<br />
-链接：<a href="https://w.atwiki.jp/libutau/pages/1.htm">https://w.atwiki.jp/libutau/pages/1.htm</a></p>
-<h2><a class="header" href="#关于作者" id="关于作者">关于作者</a></h2>
+<li><a href="#tempbat-%E9%A1%B5%E9%A6%96">temp.bat 页首</a></li>
+<li><a href="#tempbat-%E6%AD%A3%E6%96%87">temp.bat 正文</a>
 <ul>
-<li>本人与各位一样，是 UTAU 的粉丝，对 UTAU 的原理有一定的研究，但调音能力在水平线以下。</li>
-<li>本人主要使用 C++ 为工具，在开发 QPitchEditor 前制作了一大堆 UTAU 插件，自此对 UTAU 爱到一发不可收拾。</li>
-<li>本人主要使用 UTAU 制作三次元（鬼畜）作品，诚心希望各位大大不要产生偏见。</li>
-<li>本人不是音乐专业，天生五音不全。</li>
-<li>幻想将来做一个声音合成引擎。</li>
+<li><a href="#%E5%AF%B9%E4%BA%8E%E4%BC%91%E6%AD%A2%E7%AC%A6">对于休止符</a></li>
+<li><a href="#%E5%AF%B9%E4%BA%8E%E9%99%A4%E4%BC%91%E6%AD%A2%E7%AC%A6%E4%BB%A5%E5%A4%96%E7%9A%84%E9%9F%B3%E7%AC%A6">对于除休止符以外的音符</a></li>
 </ul>
-<h2><a class="header" href="#其他" id="其他">其他</a></h2>
-<ol>
-<li>本页面使用 mdBook 设计，感谢 GitHub Pages 提供服务器。</li>
-<li>如果您在使用中发现任何 Bug，请第一时间联系我修改。</li>
-</ol>
-<h2><a class="header" href="#联系方式" id="联系方式">联系方式</a></h2>
+</li>
+<li><a href="#temp_helperbat-%E5%86%85%E5%AE%B9">temp_helper.bat 内容</a>
 <ul>
-<li>QQ：2208325774</li>
-<li>Email：trueful@163.com</li>
+<li><a href="#%E4%B8%8Eust%E6%97%A0%E5%85%B3%E7%9A%84%E6%8C%87%E4%BB%A4">[与ust无关的指令]</a></li>
 </ul>
+</li>
+<li><a href="#tempbat-%E9%A1%B5%E8%84%9A">temp.bat 页脚</a>
+<ul>
+<li><a href="#%E4%B8%8Eust%E6%97%A0%E5%85%B3%E7%9A%84%E6%8C%87%E4%BB%A4-1">[与ust无关的指令]</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#渲染脚本的位置" id="渲染脚本的位置">渲染脚本的位置</a></h2>
+<h3><a class="header" href="#临时文件夹" id="临时文件夹">临时文件夹</a></h3>
+<p>一般地，UTAU 启动后，会在<strong>系统环境变量为 TEMP 的路径下</strong>创建后台工作目录 <code>utauX</code>（X为正整数，由于utau可以多开，按启动顺序依次递增），用来存放合成脚本文件。</p>
+<p>一般是这样一个文件夹：<code>C:\user\&lt;user名&gt;\AppData\Local\Temp\utau1\</code></p>
+<h3><a class="header" href="#脚本文件" id="脚本文件">脚本文件</a></h3>
+<p>一般会产生以下两个文件。</p>
+<ul>
+<li>temp.bat</li>
+<li>temp_helper.bat</li>
+</ul>
+<p>如果使用了 UTAU 的多核渲染，那么不会产生 helper，会产生以下文件，具体数量与线程数相同。</p>
+<ul>
+<li>temp.bat</li>
+<li>temp1.bat</li>
+<li>temp2.bat</li>
+<li>temp3.bat</li>
+<li>...</li>
+</ul>
+<h2><a class="header" href="#渲染脚本的作用" id="渲染脚本的作用">渲染脚本的作用</a></h2>
+<h3><a class="header" href="#单核处理" id="单核处理">单核处理</a></h3>
+<h4><a class="header" href="#tempbat" id="tempbat">temp.bat</a></h4>
+<ul>
+<li>从UTAU直接启动</li>
+<li>将各种参数存在批处理的变量中</li>
+<li>对于休止符，直接启动wavtool</li>
+</ul>
+<h4><a class="header" href="#temp_helperbat" id="temp_helperbat">temp_helper.bat</a></h4>
+<ul>
+<li>从temp.bat中启动</li>
+<li>将temp.bat中设定的参数发送给resampler和wavtool</li>
+</ul>
+<h3><a class="header" href="#多核处理" id="多核处理">多核处理</a></h3>
+<h4><a class="header" href="#tempbat-1" id="tempbat-1">temp.bat</a></h4>
+<ul>
+<li>一次性调用合成器，在最后启动。</li>
+</ul>
+<h4><a class="header" href="#其他批处理文件" id="其他批处理文件">其他批处理文件</a></h4>
+<ul>
+<li>在合成开始后同时启动重采样器，并行进程。</li>
+<li>所有进程结束后启动 <code>temp.bat</code>。</li>
+</ul>
+<p><strong>本文只讨论单核渲染的批处理文件。</strong></p>
+<h2><a class="header" href="#渲染脚本的内容" id="渲染脚本的内容">渲染脚本的内容</a></h2>
+<h3><a class="header" href="#tempbat-页首" id="tempbat-页首">temp.bat 页首</a></h3>
+<p><strong>@rem project</strong><br />
+工程文件名</p>
+<p><strong>@set loadmodule</strong><br />
+模块的设定？似乎一直是空白的</p>
+<p><strong>@set tempo</strong><br />
+工程曲速</p>
+<p><strong>@set samples</strong><br />
+采样频率</p>
+<p><strong>@set oto</strong><br />
+音源文件夹的完整路径</p>
+<p><strong>@set tool</strong><br />
+合成引擎 (wavtool)的完整路径</p>
+<p><strong>@set resamp</strong><br />
+重采样引擎(resampler) 的完整路径</p>
+<p><strong>@set output</strong><br />
+temp.wav的相对路径</p>
+<p><strong>@set helper</strong><br />
+temp_helper.bat的路径</p>
+<p><strong>@set cachedir</strong><br />
+缓存文件夹的路径</p>
+<p><strong>@set flag</strong><br />
+全局Flags</p>
+<p><strong>@set env</strong><br />
+默认音量包络</p>
+<p><strong>@set stp</strong><br />
+定义变量stp</p>
+<p><strong>@del &quot;%output%&quot; 2&gt;nul</strong><br />
+如果temp.wav存在，则将它删掉<br />
+&quot;2&gt;nul&quot;指的是不输出错误信息</p>
+<p><strong>@mkdir &quot;%cachedir%&quot; 2&gt;nul</strong><br />
+创建缓存文件夹</p>
+<h3><a class="header" href="#tempbat-正文" id="tempbat-正文">temp.bat 正文</a></h3>
+<h4><a class="header" href="#对于休止符" id="对于休止符">对于休止符</a></h4>
+<p><strong>@&quot;%tool%&quot; &quot;%output%&quot;&quot;%oto%\R.wav&quot; 0 480@120+0.0 0 0</strong><br />
+直接调用wavtool</p>
+<blockquote>
+<ul>
+<li>第一个参数：输出文件</li>
+<li>第二个参数：在原音设定文件夹下的R.wav<code>（似乎用这个来识别休止符）</code></li>
+<li>第三个参数：stp<code>（休止符为0）</code></li>
+<li>第四个参数：输出的实际长度<br />
+格式：音长@tempo+校正值<br />
+校正值：<code>(先行发声) - (后一个音符的先行发声) + (后一个音符的重叠)</code></li>
+<li>第五个参数（以及后面一堆）：音量包络<code>（对于休止符:0 0）</code></li>
+</ul>
+</blockquote>
+<h4><a class="header" href="#对于除休止符以外的音符" id="对于除休止符以外的音符">对于除休止符以外的音符</a></h4>
+<p><strong>@set params=100 0 !120 AA#5#　<code>[必填]</code></strong><br />
+设定音调参数</p>
+<blockquote>
+<ul>
+<li>第一个参数：音量</li>
+<li>第二个参数：移调</li>
+<li>第三个参数：曲速<code>（格式：!tempo） </code></li>
+<li>第四个参数：音高曲线字符串</li>
+</ul>
+</blockquote>
+<p><strong>@set flag=&quot;g5&quot;</strong><br />
+设定 Flags</p>
+<blockquote>
+<ul>
+<li>一般是全局flags在后，音符flags在前</li>
+<li>出现同一个参数时，只有第一个有效</li>
+<li>当出现 e 或者 E 时，在前面添加反斜杠</li>
+</ul>
+</blockquote>
+<p><strong>@set env=0 5 35 0 100 100 0 70 0 10 100 <code>[必填]</code></strong><br />
+音量包络<code>（除了休止符，有三种格式，任选其一）</code></p>
+<blockquote>
+<ul>
+<li>p1 p2 p3 v1 v2 v3 v4 ove</li>
+<li>p1 p2 p3 v1 v2 v3 v4 ove p4</li>
+<li>p1 p2 p3 v1 v2 v3 v4 ove p4 p5 v5</li>
+</ul>
+</blockquote>
+<p><strong>@set stp=150</strong><br />
+设定 stp 数值</p>
+<p><strong>@set vel=100<code>【必填】</code></strong><br />
+辅音速度</p>
+<p><strong>@set temp=&quot;%cachedir%\1_あ_C4_OkgOOW.wav&quot;<code>【必填】</code></strong><br />
+缓存文件的路径</p>
+<blockquote>
+<ul>
+<li>文件名是 <code>[ust音符序号]_[歌词]_[音阶]_[六位英文数字].wav</code></li>
+<li>歌词中的<code>半角空格</code>会被替换为<code>“+”</code>，<code>“*”</code>替换为<code>“$”</code>，<code>“?”</code>替换为<code>“=”</code>，<code>正反斜杠</code>替换为<code>下划线</code>，其他文件名敏感符号直接忽略。</li>
+<li>乱码后缀意义不明（可能是随机生成）</li>
+<li>当对同一个音符进行操作后，通过改变文件名来区分缓存，这种方法比较好。</li>
+</ul>
+</blockquote>
+<p><strong>@echo ##########------------------------------(1/4)<code>【必填】</code></strong><br />
+显示合成进度</p>
+<p><strong>@call %helper% &quot;%oto%_おおうえあ.wav&quot; C4 480@120+70.0 30 3170.884 600 50.0 -1169.19 0<code>【必填】</code></strong><br />
+temp_helper.bat的启动指令</p>
+<blockquote>
+<ul>
+<li>第1个参数：采样的文件名(&quot;%oto%\あ.wav&quot;)</li>
+<li>第2个参数：渲染目标音阶名(C4)</li>
+<li>第3个参数：音符长度(与休止符相同)(480@120+70.0)</li>
+<li>第4个参数：先行发声(30)</li>
+<li>第5个参数：偏移(3170.884)</li>
+<li>第6个参数：resampler输出的声音长度(600)<br />
+<code>与wavtool结合前，没有经过裁剪直接输出的长度</code><br />
+<code>(第3个参数换算为ms后的长度+stp)/50，四舍五入以后再乘以50</code></li>
+<li>第7个参数 固定范围(50.0)</li>
+<li>第8个参数 右侧空白(-1169.19)</li>
+<li>第9个参数 序号(0)<br />
+<code>多线程合成时这个参数如果错误可能引起问题</code></li>
+</ul>
+</blockquote>
+<h3><a class="header" href="#temp_helperbat-内容" id="temp_helperbat-内容">temp_helper.bat 内容</a></h3>
+<h4><a class="header" href="#与ust无关的指令" id="与ust无关的指令">[与ust无关的指令]</a></h4>
+<p><strong>@if exist %temp%goto A</strong><br />
+如果存在缓存文件，那么跳过重采样步骤</p>
+<p><strong>@if exist&quot;%cachedir%%9_<em>.wav&quot; del &quot;%cachedir%%9_</em>.wav&quot;</strong><br />
+如果有相同序号但不同名称的文件，则删除</p>
+<p><strong>@&quot;%resamp%&quot;%1 %temp% %2 %vel% %flag% %5 %6 %7 %8 %params%</strong><br />
+启动重采样引擎（之前已经讲过）</p>
+<p><strong>:A</strong><br />
+提供给第一行跳跃的标签</p>
+<p><strong>@&quot;%tool%&quot;&quot;%output%&quot; %temp% %stp% %3 %env%</strong><br />
+启动合成引擎（与休止符一样）</p>
+<h3><a class="header" href="#tempbat-页脚" id="tempbat-页脚">temp.bat 页脚</a></h3>
+<h4><a class="header" href="#与ust无关的指令-1" id="与ust无关的指令-1">[与ust无关的指令]</a></h4>
+<p><strong>@if not exist&quot;%output%.whd&quot; goto E</strong><br />
+<strong>@if not exist&quot;%output%.dat&quot; goto E</strong><br />
+检查是否生成了 temp.whd 和 temp.dat。如果没有，跳过以下步骤。</p>
+<blockquote>
+<p>当temp_helper.bat正在被调用时，还没有生成temp.wav，temp.whd与temp.dat已经生成了。</p>
+</blockquote>
+<p><strong>copy /Y&quot;%output%.whd&quot; /B + &quot;%output%.dat&quot; /B &quot;%output%&quot;</strong><br />
+将 temp.whd 和 temp.dat 合并为 temp.wav。</p>
+<blockquote>
+<p>#whd可能是 <code>wav head</code> 的意思。</p>
+</blockquote>
+<p><strong>del &quot;%output%.whd&quot;</strong><br />
+<strong>del&quot;%output%.dat&quot;</strong><br />
+删除temp.whd与temp.dat。</p>
+<p><strong>:E</strong><br />
+跳过合并与删除过程的标签。</p>
 
                     </main>
 
