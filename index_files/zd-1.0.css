@@ -44,6 +44,11 @@ nav {
 nav li, nav a {
   text-decoration: none;
   list-style: none;
+  
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  user-select:none;
 }
 nav .nav-logo {
   width: auto;
@@ -107,6 +112,7 @@ nav .nav-list > li .active {
   color: #fff;
   background: #41CD52;
 }
+
 nav .nav-list > li a {
   color: #5a5c5f;
   display: inline-block;
@@ -117,6 +123,7 @@ nav .nav-list > li a {
   border-radius: 5px;
   text-decoration: none;
 }
+
 @media (max-width: 1200px) {
   nav .nav-list > li a {
     width: 100%;
@@ -124,10 +131,12 @@ nav .nav-list > li a {
     margin: 0;
   }
 }
+
 nav .nav-list > li a:hover {
   color: #fff;
   background-color: #41CD52;
 }
+
 nav .nav-list > li .menu {
   min-width: 100px;
   background: #fff;
