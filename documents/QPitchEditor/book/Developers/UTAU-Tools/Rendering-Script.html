@@ -18,8 +18,6 @@
         <meta name="theme-color" content="#ffffff" />
 
         
-        <link rel="icon" href="../../favicon.svg">
-        
         
         <link rel="shortcut icon" href="../../favicon.png">
         
@@ -304,9 +302,13 @@ temp_helper.bat的路径</p>
 <li>第一个参数：输出文件</li>
 <li>第二个参数：在原音设定文件夹下的R.wav<code>（似乎用这个来识别休止符）</code></li>
 <li>第三个参数：stp<code>（休止符为0）</code></li>
-<li>第四个参数：输出的实际长度<br />
-格式：音长@tempo+校正值<br />
-校正值：<code>(先行发声) - (后一个音符的先行发声) + (后一个音符的重叠)</code></li>
+<li>第四个参数：输出的实际长度
+<ul>
+<li>格式：音长@tempo+校正值</li>
+<li>校正值 = 先行声音（校正后）+ 末端偏移<br />
+详见 <a href="../UTAU-Backend/Length-Correction.html#%E9%9F%B3%E7%AC%A6%E5%AE%9E%E9%99%85%E9%95%BF%E5%BA%A6%E4%B8%8E%E4%BA%8C%E6%AC%A1%E6%A0%A1%E6%AD%A3">咬合校正</a></li>
+</ul>
+</li>
 <li>第五个参数（以及后面一堆）：音量包络<code>（对于休止符:0 0）</code></li>
 </ul>
 </blockquote>
@@ -364,13 +366,19 @@ temp_helper.bat的启动指令</p>
 <li>第3个参数：音符长度(与休止符相同)(480@120+70.0)</li>
 <li>第4个参数：先行发声(30)</li>
 <li>第5个参数：偏移(3170.884)</li>
-<li>第6个参数：resampler输出的声音长度(600)<br />
-<code>与wavtool结合前，没有经过裁剪直接输出的长度</code><br />
-<code>(第3个参数换算为ms后的长度+stp)/50，四舍五入以后再乘以50</code></li>
+<li>第6个参数：resampler输出的声音长度(600)
+<ul>
+<li>与wavtool结合前，没有经过裁剪直接输出的长度</li>
+<li>（第3个参数换算为ms后的长度+stp）/50，四舍五入以后再乘以50</li>
+</ul>
+</li>
 <li>第7个参数 固定范围(50.0)</li>
 <li>第8个参数 右侧空白(-1169.19)</li>
-<li>第9个参数 序号(0)<br />
-<code>多线程合成时这个参数如果错误可能引起问题</code></li>
+<li>第9个参数 序号(0)
+<ul>
+<li>多线程合成时这个参数如果错误可能引起问题</li>
+</ul>
+</li>
 </ul>
 </blockquote>
 <h3><a class="header" href="#temp_helperbat-内容" id="temp_helperbat-内容">temp_helper.bat 内容</a></h3>

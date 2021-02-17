@@ -18,8 +18,6 @@
         <meta name="theme-color" content="#ffffff" />
 
         
-        <link rel="icon" href="../../favicon.svg">
-        
         
         <link rel="shortcut icon" href="../../favicon.png">
         
@@ -166,6 +164,18 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#utau-引擎调用" id="utau-引擎调用">UTAU 引擎调用</a></h1>
+<p>本章将介绍 UTAU 最重要的后端处理过程————引擎调用。</p>
+<hr />
+<h2><a class="header" href="#utau-合成声音原理" id="utau-合成声音原理">UTAU 合成声音原理</a></h2>
+<ul>
+<li>将人工录制的声音样本 <strong>拉伸、变调（重采样）</strong>，再<strong>拼接（合成）</strong>。</li>
+</ul>
+<h2><a class="header" href="#引擎" id="引擎">引擎</a></h2>
+<ul>
+<li>引擎分为合成器与重采样器，重采样器进行拉伸变调工作，合成器对重采样器的输出文件进行拼接。</li>
+<li>合成后的音频质量由音源本身质量决定，但很大程度上受重采样器的算法影响。</li>
+<li>引擎都是<strong>控制台程序</strong>，没有 GUI 框架，运行时在控制台输出信息供用户参考，执行完毕立即返回。</li>
+</ul>
 
                     </main>
 

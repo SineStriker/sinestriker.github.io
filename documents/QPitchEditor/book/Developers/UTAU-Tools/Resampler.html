@@ -18,8 +18,6 @@
         <meta name="theme-color" content="#ffffff" />
 
         
-        <link rel="icon" href="../../favicon.svg">
-        
         
         <link rel="shortcut icon" href="../../favicon.png">
         
@@ -165,11 +163,11 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#utau-重采样器" id="utau-重采样器">UTAU 重采样器</a></h1>
+                        <h1><a class="header" href="#重采样器resampler" id="重采样器resampler">重采样器（Resampler）</a></h1>
 <p>重采样器介绍</p>
 <hr />
 <ul>
-<li><a href="#utau-%E9%87%8D%E9%87%87%E6%A0%B7%E5%99%A8">UTAU 重采样器</a>
+<li><a href="#%E9%87%8D%E9%87%87%E6%A0%B7%E5%99%A8resampler">重采样器（Resampler）</a>
 <ul>
 <li><a href="#%E4%BD%9C%E7%94%A8">作用</a></li>
 <li><a href="#%E5%91%BD%E4%BB%A4%E8%A1%8C">命令行</a></li>
@@ -228,7 +226,7 @@
 <li>
 <p>关于实际长度</p>
 <ul>
-<li>详见咬合校正</li>
+<li>详见 <a href="../UTAU-Backend/Length-Correction.html#%E9%9F%B3%E7%AC%A6%E5%AE%9E%E9%99%85%E9%95%BF%E5%BA%A6%E4%B8%8E%E4%BA%8C%E6%AC%A1%E6%A0%A1%E6%AD%A3">咬合校正</a></li>
 </ul>
 </li>
 <li>
@@ -280,11 +278,12 @@
 <li>按指定的曲速决定控制点（音高采样点）的数量，每拍有96个控制点（5ticks采样一次）
 <ul>
 <li>!120：0.5秒，96个采样点</li>
-<li>!180：0.333秒，86个采样点</li>
+<li>!180：0.333秒，96个采样点</li>
 </ul>
 </li>
 <li>音高曲线的起点：先行声音（校正后）+ STP（校正后）</li>
-<li>通过 <strong>Base64</strong> 将 <strong>-2048~2047</strong> 的 <strong>12bit 整数</strong>转换成每单元 <strong>2个字符</strong> 的字符串
+<li>采样点是整 <strong>-2048~2047</strong> 的 <strong>12bit 整数</strong>，每个半音相当于 100</li>
+<li>通过 <strong>Base64</strong> 将采样点的值转换成每单元 <strong>2个字符</strong> 的字符串
 <ul>
 <li><code>38</code>   -&gt; <code>Am</code>  <strong>(38 = 0 * 64 + 38 * 1)</strong></li>
 <li><code>176</code> -&gt; <code>Cw</code>  <strong>(176 = 2 * 64 + 48 * 1)</strong></li>
